@@ -1,0 +1,32 @@
+---
+- name: Configurar data e hora
+  hosts: all
+  become: yes
+  
+  tasks:
+    - name: Definir timezone
+      community.general.timezone:
+        name: America/Sao_Paulo
+
+    - name: Garantir NTP ativo
+      ansible.builtin.command: timedatectl set-ntp true
+      changed_when: false
+
+    - name: Habilitar systemd-timesyncd
+      ansible.builtin.systemd:
+        name: systemd-timesyncd
+        enabled: yes
+        state: started
+
+    - name: Reiniciar serviço de sincronização
+      ansible.builtin.systemd:
+        name: systemd-timesyncd
+        state: restarted
+
+    - name: Ver status do tempo
+      ansible.builtin.command: timedatectl status
+      register: time_status
+
+    - name: Mostrar status
+      ansible.builtin.debug:
+        var: time_status.stdout_lines
